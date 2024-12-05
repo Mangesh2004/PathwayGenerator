@@ -1,101 +1,167 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
+import { chatSession } from '@/models/AiModel';
+
+const QuizGeneration = () => {
+  const [courseName, setCourseName] = useState('');
+  const [quiz, setQuiz] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showAnswers, setShowAnswers] = useState(false);
+
+  const handleGenerateQuiz = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    setQuiz(null);
+    setError(null);
+    setShowAnswers(false);
+
+    try {
+      const prompt = `Generate a quiz with 10 questions ranging from basic to advanced for the course: "${courseName}". 
+      Questions should cover basic, intermediate, and advanced topics, with multiple-choice options and correct answers. 
+      Include difficulty level for each question. Format the questions as:
+      1. Question 1?
+      A. Option 1
+      B. Option 2
+      C. Option 3
+      D. Option 4
+      Correct Answer: (e.g., A)`;
+
+      const result = await chatSession.sendMessage(prompt);
+      const quizContent = result.response.text();
+      setQuiz(quizContent);
+    } catch (err) {
+      setError('Failed to generate quiz. Please try again.' as any);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatQuiz = (quizText: any) => {
+    return quizText.split('\n').map((line: any, index: any) => {
+      // Question number with difficulty
+      if (line.match(/^\d+\./)) {
+        return (
+          <div key={index} className="mt-8 first:mt-4">
+            <h3 className="text-lg font-bold text-gray-800">
+              {line}
+            </h3>
+          </div>
+        );
+      }
+      // Multiple choice options
+      else if (line.match(/^[A-D]\./)) {
+        return (
+          <div key={index} className="ml-4 mt-2 hover:bg-gray-50 p-2 rounded-md transition-colors">
+            <label className="flex items-start space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name={`question-${index}`}
+                className="mt-1"
+                onChange={(e) => handleAnswerChange(e, line)}
+              />
+              <span className="text-gray-700">{line}</span>
+            </label>
+          </div>
+        );
+      }
+      // Correct answer
+      else if (line.match(/^Correct Answer:/i)) {
+        return showAnswers ? (
+          <div key={index} className="mt-3 ml-4 p-2 bg-green-50 rounded-md">
+            <p className="text-green-700 font-medium">
+              {line}
+            </p>
+          </div>
+        ) : null;
+      }
+      // Difficulty level
+      else if (line.match(/^Difficulty:/i)) {
+        return (
+          <div key={index} className="ml-4 mt-1">
+            <span className="text-sm text-gray-500 italic">
+              {line}
+            </span>
+          </div>
+        );
+      }
+      // Other lines
+      return line.trim() && (
+        <p key={index} className="ml-4 mt-1 text-gray-600">
+          {line}
+        </p>
+      );
+    });
+  };
+
+  const handleAnswerChange = (e: any, line: string) => {
+    
+      const correctAnswer = (quiz as any).split('\n').find((l: string) => l.startsWith('Correct Answer:'))?.split(': ')[1];
+    
+    
+    if (e.target.checked && line.endsWith(correctAnswer)) {
+      e.target.parentElement.classList.add('bg-green-50');
+      e.target.parentElement.classList.remove('bg-red-50');
+    } else {
+      e.target.parentElement.classList.add('bg-red-50');
+      e.target.parentElement.classList.remove('bg-green-50');
+      setShowAnswers(true);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <Card>
+      <CardHeader>
+        <CardTitle>Generate Quiz</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleGenerateQuiz}>
+          <Input
+            type="text"
+            placeholder="Enter course name"
+            value={courseName}
+            onChange={(e) => setCourseName(e.target.value)}
+            required
+          />
+          <Button type="submit" disabled={loading}>
+            {loading ? (
+              <div className="flex items-center">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <span>Generating Quiz...</span>
+              </div>
+            ) : (
+              "Generate Quiz"
+            )}
+          </Button>
+        </form>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        {error && (
+          <Alert variant="destructive" className="mt-6">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {quiz && (
+          <div className="mt-8">
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-6">
+                Quiz for {courseName}
+              </h2>
+              <div className="space-y-2">
+                {formatQuiz(quiz)}
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default QuizGeneration;
