@@ -1,87 +1,105 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
-import { chatSession } from '@/models/AiModel';
-import axios from 'axios';
-import { useUser } from '@clerk/nextjs';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+
+import axios from "axios";
+import { useUser } from "@clerk/nextjs";
 
 const PathwayComponent = () => {
   const [loading, setLoading] = useState(false);
   const [pathway, setPathway] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const {user}=useUser()
-  const userId=user?.id as any
+  const { user } = useUser();
+  const userId = user?.id as any;
 
-  // Fetch user results
-  const fetchResults = async () => {
-    try {
-        const response = await fetch(`/api/getResult?userId=${userId}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch results: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        return data.results;
-      } catch (error) {
-        console.error('Failed to fetch results:', error);
-        throw new Error('Failed to fetch quiz results');
-      }
-      
-};
-
-  // Generate personalized pathway
-  const generatePathway = async () => {
+  const fetchPathway = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const results = await fetchResults();
-      
-      const prompt = `
-        Based on these quiz results: ${JSON.stringify(results)}, create a personalized learning pathway. 
-        Focus on improving weak areas while building on strengths. Include detailed steps and topics to study, and suggest resources.
-      `;
-
-      const response = await chatSession.sendMessage(prompt);
-      const pathwayContent = await response.response.text();
-
-      setPathway(pathwayContent);
+      const { data } = await axios.post(
+        `/api/generatePathway?userId=${userId}`
+      );
+      setPathway(data.pathway);
     } catch (err) {
-      console.error('Error generating pathway:', err);
-      setError('Failed to generate learning pathway.');
+      console.error("Error fetching pathway:", err);
+      setError("Failed to fetch learning pathway.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-4 border rounded-lg">
-      <h1 className="text-xl font-bold mb-4">Your Personalized Learning Pathway</h1>
-      {error && <p className="text-red-600">{error}</p>}
+    <div className="min-h-screen bg-slate-900 p-5">
+      <div className=" mx-auto p-6 bg-gray-900 text-gray-100 rounded-xl shadow-xl border border-gray-700">
+  <h1 className="text-3xl font-extrabold mb-6 text-center text-white">
+    Your Personalized Learning Pathway
+  </h1>
 
-      {!pathway && !loading && (
-        <Button onClick={generatePathway}>
-          Generate Pathway
-        </Button>
-      )}
-
-      {loading && (
-        <div className="flex items-center">
-          <Loader2 className="mr-2 animate-spin" />
-          <span>Generating your pathway...</span>
-        </div>
-      )}
-
-      {pathway && (
-        <div className="mt-4">
-          <h2 className="text-lg font-semibold mb-2">Generated Pathway:</h2>
-          <pre className="bg-gray-100 p-4 rounded-lg">{pathway}</pre>
-        </div>
-      )}
+  {error && (
+    <div className="p-4 mb-6 bg-red-800 border border-red-600 rounded-lg">
+      <p className="text-red-200">{error}</p>
     </div>
+  )}
+
+  {!pathway && !loading && (
+    <div className="text-center">
+      <Button
+        onClick={fetchPathway}
+        className="px-6 py-3 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-800 transition-transform transform hover:scale-105"
+      >
+        Generate Pathway
+      </Button>
+    </div>
+  )}
+
+  {loading && (
+    <div className="flex items-center justify-center p-8 space-x-3 bg-gray-800 rounded-lg">
+      <span className="text-gray-300 font-medium">
+        Creating your personalized pathway...
+      </span>
+      <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  )}
+
+  {pathway && (
+    <div className="space-y-8">
+      <h2 className="text-2xl font-bold text-gray-200">
+        Your Learning Journey
+      </h2>
+      <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-md">
+        {Array.isArray(pathway) ? (
+          <div className="space-y-6">
+            {pathway.map((step, index) => (
+              <div
+                key={index}
+                className="p-4 bg-gray-700 rounded-lg shadow-lg border-l-4 border-blue-600"
+              >
+                <div className="flex items-start space-x-4">
+                  <span className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-blue-500 text-white rounded-full font-bold text-lg">
+                    {index + 1}
+                  </span>
+                  <p className="text-gray-300 text-lg">
+                    {step.replace(/\*\*/g, "")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <pre className="whitespace-pre-wrap text-gray-300 text-lg">
+            {typeof pathway === "string"
+              ? pathway.replace(/\*\*/g, "")
+              : pathway}
+          </pre>
+        )}
+      </div>
+    </div>
+  )}
+</div>
+    </div>
+
   );
 };
 

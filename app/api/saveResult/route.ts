@@ -1,47 +1,68 @@
-import { NextResponse } from 'next/server';
-import prisma from "@/app/libs/prismadb";
+import { NextRequest, NextResponse } from "next/server";
+import  prisma from "@/app/libs/prismadb";
 
-interface QuizResult {
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  difficulty: string;
+}
+
+interface QuizData {
+  userId: string;
+  courseName: string;
   score: number;
   level: string;
+  quiz: QuizQuestion[];
 }
 
-interface QuizUser {
-  id: string;
-}
-
-interface RequestBody {
-  user: QuizUser;
-  result: QuizResult;
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { user, result }: RequestBody = await request.json();
+    const data: QuizData = await request.json();
+    const { userId, courseName, score, level, quiz } = data;
+    
 
-    // Validate input
-    if (!user?.id || result?.score === undefined || !result?.level) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    const savedResult = await prisma.result.create({
+    // Type-safe creation of result and nested questions
+    const result = await prisma.result.create({
       data: {
-        userId: user.id,
-        score: result.score,
-        level: result.level,
+        userId,
+        courseName,
+        score,
+        level,
+        questions: {
+          create: quiz.map((question:any) => ({
+            question: question.question,
+            options: question.options,
+            correctAnswer: question.correctAnswer,
+            difficulty: question.difficulty,
+          })),
+        },
+      },
+      include: {
+        questions: true,
       },
     });
 
-    return NextResponse.json(savedResult, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      result 
+    }, {
+      status: 201,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
 
   } catch (error) {
-    console.error('Failed to save result:', error);
-    return NextResponse.json(
-      { error: 'Failed to save result' },
-      { status: 500 }
-    );
+    console.error("Error saving results:", error);
+    return NextResponse.json({ 
+      success: false, 
+      error: "Failed to save results." 
+    }, {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
   }
 }

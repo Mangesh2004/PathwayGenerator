@@ -9,8 +9,7 @@ import { Loader2 } from "lucide-react";
 import { chatSession } from "@/models/AiModel";
 import { evaluateQuiz } from "@/helpers/evaluatequiz";
 import { useClerk, useUser } from "@clerk/nextjs";
-import prisma from "@/app/libs/prismadb";
-import axios from "axios";
+import { Check } from "lucide-react";
 import Link from "next/link";
 
 // Define Types for Quiz and Evaluation
@@ -35,6 +34,8 @@ const QuizComponent: React.FC = () => {
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const { user } = useUser();
   const { signOut } = useClerk()  //Save User to db
+
+  const userId=user?.id
 
   const saveUser = async () => {
     await fetch("/api/saveUser", {
@@ -76,7 +77,6 @@ const QuizComponent: React.FC = () => {
 
       // Format quiz from API response
       const formattedQuiz = formatQuiz(quizContent);
-      console.log("Formatted Quiz:", formattedQuiz);
 
       
 
@@ -141,6 +141,11 @@ const QuizComponent: React.FC = () => {
     const result = evaluateQuiz(userAnswers, quiz);
     setEvaluation(result);
 
+    console.log("Evaluation Result:", result);
+    const score = result.score;
+    const level = result.level;
+    
+
     // Save user to database
     //Update user results
     const saveQuizResults = async () => {
@@ -149,7 +154,7 @@ const QuizComponent: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user, result }),
+        body: JSON.stringify({ userId, score,level, courseName, quiz }),
       });
     };
     saveQuizResults();
@@ -158,86 +163,116 @@ const QuizComponent: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Quiz Generator</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Input for course name */}
-        <Input
-          type="text"
-          placeholder="Enter course name (e.g., DSA in Java)"
-          value={courseName}
-          onChange={(e) => setCourseName(e.target.value)}
-          required
-        />
-        <Button
-          onClick={handleGenerateQuiz}
-          disabled={loading || !courseName}
-          className="mt-4"
+    <div className="min-h-screen  bg-slate-900 p-5">
+      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 text-white border-gray-700 p-4 overflow-auto">
+  <CardHeader className="border-b border-gray-700">
+    <CardTitle className="text-2xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+      Quiz Generator
+    </CardTitle>
+  </CardHeader>
+  
+  <CardContent className="space-y-6 pt-6">
+    <div className="relative">
+      <Input
+        type="text"
+        placeholder="Enter course name (e.g., DSA in Java)"
+        value={courseName}
+        onChange={(e) => setCourseName(e.target.value)}
+        required
+        className="bg-gray-800 border-gray-700 text-gray-100 placeholder:text-gray-500 focus:ring-blue-500"
+      />
+    </div>
+
+    <div className="flex gap-4">
+      <Button
+        onClick={handleGenerateQuiz}
+        disabled={loading || !courseName}
+        className="bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-800 hover:to-purple-800 text-black hover:text-white"
+      >
+        {loading ? (
+          <Loader2 className="animate-spin h-5 w-5" />
+        ) : (
+          "Generate Quiz"
+        )}
+      </Button>
+      
+      <Button 
+        onClick={() => signOut({ redirectUrl: '/' })}
+        variant="outline"
+        className="bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-800 hover:to-purple-800 text-black hover:text-white"
+      >
+        Sign out
+      </Button>
+    </div>
+
+    {error && (
+      <Alert variant="destructive" className="bg-red-900/50 border-red-800 text-red-200">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )}
+
+    {quiz.length > 0 && !loading && (
+      <div className="space-y-6">
+        {quiz.map((q, index) => (
+          <div key={index} className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-xl font-bold mb-4 text-blue-300">{q.question}</h3>
+            <div className="grid grid-cols-1 gap-3">
+              {q.options.map((option, optIndex) => (
+                <button
+                  key={optIndex}
+                  onClick={() => handleAnswerChange(index, option)}
+                  className={`
+                    p-4 rounded-lg border transition-all duration-200
+                    ${userAnswers[index] === option.split(".")[0].trim()
+                      ? 'bg-blue-500/20 border-blue-500 text-blue-300'
+                      : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700'}
+                    flex items-center justify-between
+                  `}
+                >
+                  <span>{option}</span>
+                  {userAnswers[index] === option.split(".")[0].trim() && (
+                    <Check className="h-5 w-5 text-blue-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        
+        <Button 
+          onClick={handleSubmitQuiz}
+          className="bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-800 hover:to-purple-800 text-black hover:text-white"
         >
-          {loading ? (
-            <Loader2 className="animate-spin h-5 w-5" />
-          ) : (
-            "Generate Quiz"
-          )}
+          Submit Quiz
         </Button>
-        <Button onClick={() => signOut({ redirectUrl: '/' })}>Sign out</Button>
+        <Link href="/GeneratePathway" className="block mt-6">
+      <Button className="bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-800 hover:to-purple-800 text-black hover:text-white">
+        Generate Learning Pathway
+      </Button>
+    </Link>
+      </div>
+    )}
 
-
-        {/* Error alert */}
-        {error && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Display Quiz */}
-        {quiz.length > 0 && !loading && (
-          <div className="mt-6 space-y-4">
-            {quiz.map((q, index) => (
-              <div key={index} className="p-4 border rounded-md">
-                <h3 className="font-bold">{q.question}</h3>
-                {q.options.map((option, optIndex) => (
-                  <label key={optIndex} className="block mt-2">
-                    <input
-                      type="radio"
-                      name={`question-${index}`}
-                      value={option}
-                      checked={
-                        userAnswers[index] === option.split(".")[0].trim()
-                      }
-                      onChange={() => handleAnswerChange(index, option)}
-                      className="mr-2"
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            ))}
-            <Button onClick={handleSubmitQuiz} className="mt-4">
-              Submit Quiz
-            </Button>
-
+    {evaluation && (
+      <div className="mt-6 bg-gray-800/50 p-6 rounded-lg border border-gray-700">
+        <h3 className="text-xl font-bold text-blue-300 mb-4">Your Results</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-300">Score</span>
+            <span className="text-2xl font-bold text-blue-400">{evaluation.score}/10</span>
           </div>
-        )}
-
-        {/* Evaluation result */}
-        {evaluation && (
-          <div className="mt-6">
-            <h3 className="text-lg font-bold">Your Results</h3>
-            <p>Score: {evaluation.score}/10</p>
-            <p>Level: {evaluation.level}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-300">Level</span>
+            <span className="text-lg font-semibold text-purple-400">{evaluation.level}</span>
           </div>
-        )}
+        </div>
+      </div>
+    )}
 
-        <Link href={'/GeneratePathway'} >
-        <Button>
-          Generate Pathway
-        </Button>
-        </Link>
-      </CardContent>
-    </Card>
+    
+  </CardContent>
+</Card>
+    </div>
   );
 };
 

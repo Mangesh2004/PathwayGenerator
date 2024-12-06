@@ -23,11 +23,25 @@ model User {
 }
 
 model Result {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  score     Int
-  level     String
-  createdAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  userId      String
+  courseName  String
+  score       Int
+  level       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  questions   Question[]
+  
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Question {
+  id           String    @id @default(cuid())
+  question     String
+  options      String[]
+  correctAnswer String
+  difficulty   String
+  resultId     String
+  result       Result    @relation(fields: [resultId], references: [id])
 }
 
