@@ -3,7 +3,7 @@
 import PathwayComponent from '@/components/Pathway'
 import React from 'react'
 
-export  function page() {
+export default function Pathway() {
   return (
     <div>
       <PathwayComponent />
