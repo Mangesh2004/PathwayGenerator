@@ -37,7 +37,13 @@ const QuizComponent: React.FC = () => {
   const { signOut } = useClerk()  //Save User to db
 
   const saveUser = async () => {
-    axios.post("/api/saveUser",user)
+    await fetch("/api/saveUser", {
+      method: "POST",
+      headers: {
+      "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    });
     
   };
   useEffect(() => {
@@ -138,7 +144,13 @@ const QuizComponent: React.FC = () => {
     // Save user to database
     //Update user results
     const saveQuizResults = async () => {
-       axios.post("/api/saveResult", { user, result });
+      await fetch("/api/saveResult", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user, result }),
+      });
     };
     saveQuizResults();
     console.log("Evaluation Result:", result);

@@ -5,25 +5,32 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { chatSession } from '@/models/AiModel';
 import axios from 'axios';
+import { useUser } from '@clerk/nextjs';
 
-const PathwayComponent = ({ userId }: { userId: any }) => {
+const PathwayComponent = () => {
   const [loading, setLoading] = useState(false);
   const [pathway, setPathway] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const {user}=useUser()
+  const userId=user?.id as any
 
   // Fetch user results
-  const fetchUserResults = async () => {
+  const fetchResults = async () => {
     try {
-      const response = axios.get(`/api/getResult`,userId);
+        const response = await fetch(`/api/getResult?userId=${userId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch results: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        return data.results;
+      } catch (error) {
+        console.error('Failed to fetch results:', error);
+        throw new Error('Failed to fetch quiz results');
+      }
       
-      console.log(response);
-      
-      
-    } catch (err) {
-      console.error('Failed to fetch user results:', err);
-      throw new Error('Could not load user results.');
-    }
-  };
+};
 
   // Generate personalized pathway
   const generatePathway = async () => {
@@ -31,7 +38,7 @@ const PathwayComponent = ({ userId }: { userId: any }) => {
     setError(null);
 
     try {
-      const results = await fetchUserResults();
+      const results = await fetchResults();
       
       const prompt = `
         Based on these quiz results: ${JSON.stringify(results)}, create a personalized learning pathway. 
