@@ -36,12 +36,13 @@ model Result {
 }
 
 model Question {
-  id           String    @id @default(cuid())
-  question     String
-  options      String[]
+  id            String    @id @default(cuid())
+  question      String
+  options       String[]
   correctAnswer String
-  difficulty   String
-  resultId     String
-  result       Result    @relation(fields: [resultId], references: [id])
+  userAnswer    String    // Add this field
+  difficulty    String
+  resultId      String
+  result        Result    @relation(fields: [resultId], references: [id])
 }
 

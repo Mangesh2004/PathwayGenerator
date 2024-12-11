@@ -1,35 +1,64 @@
-// Define types for better TypeScript support
 interface QuizQuestion {
   question: string;
   options: string[];
-  correctAnswer: string; // Example: 'A', 'B', 'C', 'D'
+  correctAnswer: string;
+  difficulty: string;
 }
 
 interface EvaluationResult {
   score: number;
   level: string;
+  detailedAnalysis: {
+    correctAnswers: string[];
+    incorrectAnswers: {
+      question: string;
+      userAnswer: string;
+      correctAnswer: string;
+      difficulty: string;
+    }[];
+    difficultyBreakdown: {
+      basic: number;
+      intermediate: number;
+      advanced: number;
+    };
+  };
 }
 
-/**
- * Evaluates the quiz answers.
- *
- * @param userAnswers - Array of user's answers (e.g., ['A', 'B', ...]).
- * @param quiz - Array of quiz questions with correct answers.
- * @returns Evaluation result with score and level.
- */
 export function evaluateQuiz(userAnswers: string[], quiz: QuizQuestion[]): EvaluationResult {
   let score = 0;
+  const detailedAnalysis = {
+    correctAnswers: [] as string[],
+    incorrectAnswers: [] as any[],
+    difficultyBreakdown: {
+      basic: 0,
+      intermediate: 0,
+      advanced: 0,
+    },
+  };
 
-  // Calculate score
+  // Calculate score and collect detailed analysis
   quiz.forEach((question, index) => {
-    if (userAnswers[index] === question.correctAnswer) {
-      score++;
-    }
-    console.log(userAnswers[index], "    ", question.correctAnswer);
+    const isCorrect = userAnswers[index] === question.correctAnswer;
     
+    if (isCorrect) {
+      score++;
+      detailedAnalysis.correctAnswers.push(question.question);
+    } else {
+      detailedAnalysis.incorrectAnswers.push({
+        question: question.question,
+        userAnswer: userAnswers[index],
+        correctAnswer: question.correctAnswer,
+        difficulty: question.difficulty.toLowerCase(),
+      });
+    }
+
+    // Update difficulty breakdown
+    const difficulty = question.difficulty.toLowerCase();
+    if (difficulty.includes('basic')) detailedAnalysis.difficultyBreakdown.basic++;
+    else if (difficulty.includes('intermediate')) detailedAnalysis.difficultyBreakdown.intermediate++;
+    else if (difficulty.includes('advanced')) detailedAnalysis.difficultyBreakdown.advanced++;
   });
 
-  // Determine the user's level based on the score
   const level =
     score >= 8
       ? "Advanced"
@@ -42,5 +71,6 @@ export function evaluateQuiz(userAnswers: string[], quiz: QuizQuestion[]): Evalu
   return {
     score,
     level,
+    detailedAnalysis,
   };
 }

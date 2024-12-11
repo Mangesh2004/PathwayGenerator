@@ -25,30 +25,83 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "No results found." });
         }
 
-        // AI prompt for pathway generation
+        const incorrectQuestions = result.questions.filter(q => 
+            q.userAnswer !== q.correctAnswer
+        ).map(q => ({
+            question: q.question,
+            userAnswer: q.userAnswer,
+            correctAnswer: q.correctAnswer,
+            difficulty: q.difficulty
+        }));
+
+        
+        // Group questions by difficulty
+        const difficultyBreakdown = result.questions.reduce((acc: any, q) => {
+            const diff = q.difficulty.toLowerCase();
+            acc[diff] = (acc[diff] || 0) + 1;
+            return acc;
+        }, {});
+
+        // Generate detailed prompt
         const prompt = `
-      Based on the following quiz results and questions, generate a personalized learning pathway for this user.
-      Course Name: ${result.courseName}
-      Score: ${result.score}/10
-      Level: ${result.level}
-      Questions: ${JSON.stringify(result.questions)}
+Generate a personalized learning pathway based on the following detailed quiz analysis:
 
-       Based on their performance, they have shown weaknesses in the following areas: <List of Weaknesses> and need improvement in: <Improvement Areas>. Please generate a highly personalized learning pathway to help them strengthen their knowledge.
+Course: ${result.courseName}
+Overall Performance:
+- Score: ${result.score}/10
+- Level: ${result.level}
+- Questions answered incorrectly: ${incorrectQuestions.length}
 
-Provide the pathway in the following structure:
+Difficulty Distribution:
+${Object.entries(difficultyBreakdown)
+    .map(([diff, count]) => `- ${diff}: ${count} questions`)
+    .join('\n')}
 
-Overview: Briefly summarize the user's weaknesses and learning goals.
-Steps: Provide a stepwise learning plan that includes:
-Resources to learn from (like books, videos, or practice platforms).
-Specific topics to focus on at each step.
-Approximate time commitment for each step.
-Final Evaluation: Suggest a method to assess their progress after completing the pathway."
-    `;
+Specific Areas Needing Improvement:
+${incorrectQuestions.map((q, i) => `
+${i + 1}. Question: ${q.question}
+   - User's Answer: ${q.userAnswer}
+   - Correct Answer: ${q.correctAnswer}
+   - Difficulty: ${q.difficulty}
+`).join('\n')}
+
+Please create a detailed learning pathway that:
+1. Addresses each concept from the incorrectly answered questions
+2. Provides specific resources and exercises for each topic
+3. Structures the learning journey from fundamental to advanced concepts
+4. Includes estimated time commitments for each learning step
+
+Format the response as:
+
+- Analysis of quiz performance
+- Brief summary of main areas needing improvement
+- Learning goals based on quiz performance
+
+DETAILED LEARNING PLAN
+1. [Topic from missed question]
+   - Learning resources (videos, articles, practice problems)
+   - Key concepts to master
+   - Estimated time commitment
+   - Practice exercises
+
+2. [Next topic]
+   [Continue for each major concept]
+
+PROGRESS TRACKING
+- Specific milestones to check understanding
+- Suggested practice exercises
+- Methods to verify improvement
+
+Please ensure the pathway is practical and focuses specifically on the concepts the user struggled with in the quiz.`;
+
 
         const response = await chatSession.sendMessage(prompt);
         const pathway = await response.response.text();
 
-        return NextResponse.json({ success: true, pathway });
+        return NextResponse.json({ success: true, pathway, analysis: {
+            incorrectQuestions,
+            difficultyBreakdown
+        } });
     } catch (error) {
         console.error("Error generating pathway:", error);
         return NextResponse.json({ success: false, error: "Failed to generate pathway." });

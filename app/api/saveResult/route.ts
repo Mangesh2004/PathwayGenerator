@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import  prisma from "@/app/libs/prismadb";
+import prisma from "@/app/libs/prismadb";
 
 interface QuizQuestion {
   question: string;
   options: string[];
   correctAnswer: string;
   difficulty: string;
+  userAnswer: string; // Added user answer field
 }
 
 interface QuizData {
@@ -13,15 +14,14 @@ interface QuizData {
   courseName: string;
   score: number;
   level: string;
-  quiz: QuizQuestion[];
+  questions: QuizQuestion[]; // Changed from quiz to questions for consistency
 }
 
 export async function POST(request: NextRequest) {
   try {
     const data: QuizData = await request.json();
-    const { userId, courseName, score, level, quiz } = data;
+    const { userId, courseName, score, level, questions } = data;
     
-
     // Type-safe creation of result and nested questions
     const result = await prisma.result.create({
       data: {
@@ -30,11 +30,12 @@ export async function POST(request: NextRequest) {
         score,
         level,
         questions: {
-          create: quiz.map((question:any) => ({
+          create: questions.map((question) => ({
             question: question.question,
             options: question.options,
             correctAnswer: question.correctAnswer,
             difficulty: question.difficulty,
+            userAnswer: question.userAnswer, // Save user's answer
           })),
         },
       },
@@ -43,21 +44,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      result 
+    return NextResponse.json({
+      success: true,
+      result
     }, {
       status: 201,
       headers: {
         'Content-Type': 'application/json',
       }
     });
-
+    
   } catch (error) {
     console.error("Error saving results:", error);
-    return NextResponse.json({ 
-      success: false, 
-      error: "Failed to save results." 
+    return NextResponse.json({
+      success: false,
+      error: "Failed to save results."
     }, {
       status: 500,
       headers: {

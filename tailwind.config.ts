@@ -59,4 +59,12 @@ export default {
   	}
   },
   plugins: [require("tailwindcss-animate")],
+  
+	"compilerOptions": {
+	  "strict": true,
+	  "esModuleInterop": true,
+	  "lib": ["dom", "dom.iterable", "esnext"],
+	  "allowJs": true
+	}
+  
 } satisfies Config;
