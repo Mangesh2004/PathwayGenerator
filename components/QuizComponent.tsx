@@ -228,11 +228,11 @@ const QuizComponent: React.FC = () => {
     <div className="min-h-screen bg-zinc-950 p-5">
       <AnimatedHeader
         text=" Welcome back!"
-        className="text-3xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent flex justify-center mb-4"
+        className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent flex justify-center mb-4"
       />
       <AnimatedHeader
         text="Ready to embark on your next learning adventure? Move a step ahead to build a roadmap tailored just for you!"
-        className="text-gray-300 flex justify-center"
+        className="text-gray-300 text-xl flex justify-center"
       />
       <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-zinc-900 p-4 md:p-8">
         <motion.div

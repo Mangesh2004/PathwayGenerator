@@ -31,8 +31,7 @@ export default function About() {
         className="mt-[3px] font-normal sm:text-[25px] text-[15px] text-justify text-gray-300"
       >
         <span className="font-semibold block leading-relaxed text-center">
-        Introducing Sarathi, your personalized learning guide. We assess your unique strengths and preferences to design custom roadmaps, track your progress, and create adaptive quizzes. With real-time feedback and a focus on your educational goals, Sarathi makes your journey to knowledge efficient and engaging. Navigate your way to success with Sarathi!
-        </span>
+        Unleash your potential with SAARTHI – your personalized learning companion! By analyzing your strengths and weaknesses in each topic, we craft tailored roadmaps and provide curated resources at every step, all designed to match your unique skills, goals, and learning style.</span>
       </motion.p>
     </motion.div>
   );

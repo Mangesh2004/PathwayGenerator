@@ -6,6 +6,7 @@ export async function POST(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get('userId');
+        const learningStyle = searchParams.get('learningStyle') || "Visual";
 
         if (!userId) {
             return NextResponse.json(
@@ -44,9 +45,11 @@ export async function POST(req: Request) {
 
         // Generate detailed prompt
         const prompt = `
-Generate a personalized learning pathway based on the following detailed quiz analysis:
+Generate a personalized learning pathway with specific resources based on the following quiz analysis and learning style:
+Note I am rendering it on fronetend as well as making pdf of your response so dont dive me any unnessary symbols like ** or *. And on asked links include them in links format like [link](url).
 
 Course: ${result.courseName}
+Learning Style: ${learningStyle}
 Overall Performance:
 - Score: ${result.score}/10
 - Level: ${result.level}
@@ -65,35 +68,68 @@ ${i + 1}. Question: ${q.question}
    - Difficulty: ${q.difficulty}
 `).join('\n')}
 
-Please create a detailed learning pathway that:
-1. Addresses each concept from the incorrectly answered questions
-2. Provides specific resources and exercises for each topic
-3. Structures the learning journey from fundamental to advanced concepts
-4. Includes estimated time commitments for each learning step
+Please create a detailed learning pathway that provides resources specifically tailored to the user's learning style:
+
+For each topic from incorrectly answered questions, provide:
+
+1. VISUAL LEARNERS:
+   - YouTube video tutorials with timestamps
+   - Infographics and visual guides
+   - Visual algorithm animations
+   - Mind maps
+   - Visual documentation
+   - Include links for resourses if avilable
+
+2. AUDITORY LEARNERS:
+   - Podcast episodes
+   - Audio lectures
+   - Technical talks
+   - Audiobook recommendations
+   - Verbal explanations
+   - Include links for resourses if avilable
+
+3. KINESTHETIC LEARNERS:
+   - Interactive coding problems (LeetCode/GeeksForGeeks)
+   - Hands-on projects
+   - Practice exercises
+   - Debugging challenges
+   - Implementation tasks
+   - Include links for resourses if avilable
 
 Format the response as:
 
-- Analysis of quiz performance
-- Brief summary of main areas needing improvement
-- Learning goals based on quiz performance
+LEARNING PATHWAY ANALYSIS
+- Summary of quiz performance
+- Key areas for improvement
+- Learning style considerations
 
-DETAILED LEARNING PLAN
-1. [Topic from missed question]
-   - Learning resources (videos, articles, practice problems)
-   - Key concepts to master
-   - Estimated time commitment
-   - Practice exercises
+PERSONALIZED RESOURCES
+1. [Topic 1]
+   - Primary Resource (Based on learning style)
+   - Secondary Resources
+   - Practice Materials
+   - Estimated completion time
+   - Success metrics
 
-2. [Next topic]
-   [Continue for each major concept]
+2. [Topic 2]
+   [Continue for each topic]
 
-PROGRESS TRACKING
-- Specific milestones to check understanding
-- Suggested practice exercises
-- Methods to verify improvement
+PRACTICE PLAN
+- Recommended practice sequence
+- Milestone checkpoints
+- Self-assessment methods
 
-Please ensure the pathway is practical and focuses specifically on the concepts the user struggled with in the quiz.`;
+Please ensure all resources are:
+1. Relevant to the specific concepts missed in the quiz
+2. Appropriate for the user's learning style
+3. Ordered from fundamental to advanced concepts
+4. Include estimated time commitments
+5. Contain clear success criteria
 
+For Visual Learners: Focus on video timestamps, diagrams, and visual explanations
+For Auditory Learners: Focus on audio content and verbal explanations
+For Kinesthetic Learners: Focus on interactive exercises and practical implementation
+`;
 
         const response = await chatSession.sendMessage(prompt);
         const pathway = await response.response.text();

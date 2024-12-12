@@ -20,9 +20,9 @@ export default function GetStarted() {
   ];
   return (
     <div>
-      <div className="mt-10 sm:mt-20 text-center px-2">
+      <div className=" sm:mt-9 text-center px-2 ">
         
-        <AnimatedHeader text="Learning Simplified, Progress Amplified" className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6" />
+        <AnimatedHeader text="Learning Simplified, Progress Amplified!" className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6" />
 
        
       </div>

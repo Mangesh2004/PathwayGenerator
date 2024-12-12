@@ -28,6 +28,7 @@ CREATE TABLE "Question" (
     "question" TEXT NOT NULL,
     "options" TEXT[],
     "correctAnswer" TEXT NOT NULL,
+    "userAnswer" TEXT NOT NULL,
     "difficulty" TEXT NOT NULL,
     "resultId" TEXT NOT NULL,
 
