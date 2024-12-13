@@ -66,20 +66,20 @@ const QuizComponent: React.FC = () => {
 
   const userId = user?.id;
 
-  const saveUser = async () => {
-    await fetch("/api/saveUser", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(user),
-    });
-  };
-  useEffect(() => {
-    if (user) {
-      saveUser();
-    }
-  }, [user]);
+  // const saveUser = async () => {
+  //   await fetch("/api/saveUser", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify(user),
+  //   });
+  // };
+  // useEffect(() => {
+  //   if (user) {
+  //     saveUser();
+  //   }
+  // }, [user]);
 
   // Generate Quiz
   const handleGenerateQuiz = async () => {
