@@ -134,12 +134,20 @@ For Kinesthetic Learners: Focus on interactive exercises and practical implement
         const response = await chatSession.sendMessage(prompt);
         const pathway = await response.response.text();
 
-        return NextResponse.json({ success: true, pathway, analysis: {
-            incorrectQuestions,
-            difficultyBreakdown
-        } });
-    } catch (error) {
-        console.error("Error generating pathway:", error);
-        return NextResponse.json({ success: false, error: "Failed to generate pathway." });
-    }
+        const savedPathway = await prisma.pathway.create({
+            data: {
+              userId,
+              pathway: pathway,
+            },
+          });
+          return NextResponse.json({ success: true, pathwayId: savedPathway.id });
+        } catch (error) {
+          console.error("Error generating pathway:", error);
+          return NextResponse.json({ success: false, error: "Failed to generate pathway." });
+        }
+
+
+
+        
+    
 }

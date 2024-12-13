@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import axios from "axios";
@@ -24,6 +24,9 @@ import {
 } from "./ui/select";
 import { jsPDF } from "jspdf";
 
+const POLLING_INTERVAL = 5000; // 5 seconds
+
+
 const Loader = () => (
   <div className="w-5 h-5 border-2 border-t-transparent border-accent rounded-full animate-spin"></div>
 );
@@ -32,30 +35,55 @@ const PathwayComponent = () => {
   const [loading, setLoading] = useState(false);
   const [pathway, setPathway] = useState<string | null>(null);
   const [learningStyle, setLearningStyle] = useState("Visual");
+  const [polling, setPolling] = useState(false); // To track polling status
+
 
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const userId = user?.id as any;
 
-  const fetchPathway = async () => {
+  const generatePathway = async () => {
     setLoading(true);
     setError(null);
+    setPathway(null);
 
     try {
-      const { data } = await axios.post(
-        `/api/generatePathway?userId=${userId}&learningStyle=${learningStyle}`
-      );
-      setPathway(data.pathway);
-      console.log(data.pathway);
-
-      // setAnalysis(data.analysis);
+       axios.post(`/api/generatePathway?userId=${userId}&learningStyle=${learningStyle}`);
+      setPolling(true); // Start polling after initiating the generation
     } catch (err) {
-      console.error("Error fetching pathway:", err);
-      setError("Failed to fetch learning pathway.");
+      console.error("Error generating pathway:", err);
+      setError("Failed to generate learning pathway.");
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchPathwayStatus = async () => {
+    try {
+      const { data } = await axios.get(`/api/getPathwaystatus?userId=${userId}`);
+      if (data.success && data.status === "completed") {
+        setPathway(data.pathway);
+        setPolling(false); // Stop polling once pathway is available
+      } else if (data.status === "error") {
+        setError(data.error || "An error occurred.");
+        setPolling(false); // Stop polling on error
+      }
+    } catch (err) {
+      console.error("Error fetching pathway status:", err);
+      setError("Failed to fetch pathway status.");
+      setPolling(false); // Stop polling on error
+    }
+  };
+
+  useEffect(() => {
+    if (!polling) return;
+
+    const intervalId = setInterval(() => {
+      fetchPathwayStatus();
+    }, POLLING_INTERVAL);
+
+    return () => clearInterval(intervalId); // Clean up interval on unmount or when polling stops
+  }, [polling]);
 
   const downloadPDF = () => {
     try {
@@ -111,23 +139,17 @@ const PathwayComponent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-5 ">
-      <AnimatedHeader
-        text=" Personalized Learning Pathway"
-        className="text-3xl font-extrabold mt-5 mb-10 text-center text-white"
-      />
-      <div>
-        {/* Error Message */}
-        {error && (
-          <Alert variant="destructive" className="p-4 border border-red-600">
-            <AlertDescription className="text-red-200">
-              {error}
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
+    <div className="min-h-screen bg-zinc-950 p-5">
+    <AnimatedHeader text="Personalized Learning Pathway" className="text-3xl font-extrabold mt-5 mb-10 text-center text-white" />
+    <div>
+      {error && (
+        <Alert variant="destructive" className="p-4 border border-red-600">
+          <AlertDescription className="text-red-200">{error}</AlertDescription>
+        </Alert>
+      )}
+    </div>
 
-      <div className="flex justify-center items-center ">
+    <div className="flex justify-center items-center ">
         <div className="text-white font-bold text-2xl gap-2 flex justify-end mr-10 pb-6">
           <h1>Select your learning style</h1>
         </div>
@@ -145,34 +167,33 @@ const PathwayComponent = () => {
         </div>
       </div>
 
-        {/* Generate Pathway Button */}
-        {/* Generate Pathway Button or Loader */}
-        {!pathway && (
-          <div className="text-center">
-            <Button
-              onClick={fetchPathway}
-              className={cn(
-                "px-7 py-4  shadow-md hover:scale-105 transition-all",
-                loading
-                  ? "bg-zinc-600 text-white cursor-not-allowed"
-                  : "bg-accent text-black hover:text-white"
-              )}
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <Loader />
-                  <span>Loading...</span>
-                </div>
-              ) : (
-                "Show My Learning Pathway"
-              )}
-            </Button>
-          </div>
-        )}
+    {!pathway && (
+            <div className="text-center">
+              <Button
+                onClick={generatePathway}
+                className={cn(
+                  "px-7 py-4  shadow-md hover:scale-105 transition-all",
+                  loading
+                    ? "bg-zinc-600 text-white cursor-not-allowed"
+                    : "bg-accent text-black hover:text-white"
+                )}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader />
+                    <span>Loading...</span>
+                  </div>
+                ) : (
+                  "Generate Pathway"
+                )}
+              </Button>
+            </div>
+          )}
 
-        {/* Display Pathway */}
-        {pathway && (
+    {polling && <div className=" flex justify-center items-center mt-4 text-white">Your pathway is almost there</div>}
+
+    {pathway && (
           <div className="space-y-8">
             <Card className="bg-zinc-800">
               <CardHeader>
@@ -219,9 +240,9 @@ const PathwayComponent = () => {
             </div>
           </div>
         )}
-      </div>
-    
-  );
+  </div>
+);
+  
 };
 
 export default PathwayComponent;

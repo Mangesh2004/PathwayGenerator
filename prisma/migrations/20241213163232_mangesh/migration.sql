@@ -35,6 +35,17 @@ CREATE TABLE "Question" (
     CONSTRAINT "Question_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Pathway" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "pathway" JSONB NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Pathway_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -43,3 +54,6 @@ ALTER TABLE "Result" ADD CONSTRAINT "Result_userId_fkey" FOREIGN KEY ("userId") 
 
 -- AddForeignKey
 ALTER TABLE "Question" ADD CONSTRAINT "Question_resultId_fkey" FOREIGN KEY ("resultId") REFERENCES "Result"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Pathway" ADD CONSTRAINT "Pathway_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
