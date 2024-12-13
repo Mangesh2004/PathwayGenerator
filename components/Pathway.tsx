@@ -191,7 +191,7 @@ const PathwayComponent = () => {
             </div>
           )}
 
-    {polling && <div className=" flex justify-center items-center mt-4 text-white">Your pathway is almost there</div>}
+    {polling && <div className=" flex justify-center items-center mt-4 text-white  text-center">Your tailored roadmap is here! Focused, effective, and designed to match your style for faster success!</div>}
 
     {pathway && (
           <div className="space-y-8">
