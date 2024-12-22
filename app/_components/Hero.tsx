@@ -35,7 +35,7 @@ const Hero: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-[30vh] space-y-8">
-      <AnimatedHeader text="SAARTHI" className='"text-4xl md:text-6xl font-bold text-white bg-gradient-to-r from-blue-600 via-blue-400 to-blue-500 bg-clip-text text-transparent"' />
+      <AnimatedHeader text="SAARTHI" className="text-4xl font-title md:text-6xl font-bold text-white bg-gradient-to-r from-blue-600 via-blue-400 to-blue-500 bg-clip-text text-transparent" />
       <TypewriterEffectSmooth 
         words={words} 
         cursorClassName="h-8 w-[3px] bg-gradient-to-t from-blue-500 to-purple-500 rounded-full animate-pulse" 
