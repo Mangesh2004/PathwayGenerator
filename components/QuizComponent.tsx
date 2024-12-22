@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { HelpCircle, Loader2 } from "lucide-react";
+import { HelpCircle, Loader2, MoveLeft } from "lucide-react";
 import { chatSession } from "@/models/AiModel";
 import { evaluateQuiz } from "@/helpers/evaluatequiz";
 import { useClerk, useUser } from "@clerk/nextjs";
@@ -226,10 +226,19 @@ const QuizComponent: React.FC = () => {
 
   return (
     <div>
+      <div className="flex justify-between items-center ">
+      <Link href="/">
+          <Button className="mb-10 bg-white text-black hover:bg-black hover:text-white transition-transform transform hover:scale-105 px-6 py-3 rounded-md">
+            <MoveLeft />
+            Home
+          </Button>
+        </Link>
       <AnimatedHeader
         text=" Welcome back!"
-        className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent flex justify-center mb-4"
+        className="text-5xl absolute left-1/3 ml-20 transform -translate-x-1/2 font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4"
       />
+      
+      </div>
       <AnimatedHeader
         text="Ready to embark on your next learning adventure? Move a step ahead to build a roadmap tailored just for you!"
         className="text-gray-300 text-xl flex justify-center"

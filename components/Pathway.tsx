@@ -23,9 +23,10 @@ import {
   SelectValue,
 } from "./ui/select";
 import { jsPDF } from "jspdf";
+import Link from "next/link";
+import { MoveLeft } from "lucide-react";
 
 const POLLING_INTERVAL = 5000; // 5 seconds
-
 
 const Loader = () => (
   <div className="w-5 h-5 border-2 border-t-transparent border-accent rounded-full animate-spin"></div>
@@ -37,7 +38,6 @@ const PathwayComponent = () => {
   const [learningStyle, setLearningStyle] = useState("Visual");
   const [polling, setPolling] = useState(false); // To track polling status
 
-
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const userId = user?.id as any;
@@ -48,7 +48,9 @@ const PathwayComponent = () => {
     setPathway(null);
 
     try {
-       axios.post(`/api/generatePathway?userId=${userId}&learningStyle=${learningStyle}`);
+      axios.post(
+        `/api/generatePathway?userId=${userId}&learningStyle=${learningStyle}`
+      );
       setPolling(true); // Start polling after initiating the generation
     } catch (err) {
       console.error("Error generating pathway:", err);
@@ -60,7 +62,9 @@ const PathwayComponent = () => {
 
   const fetchPathwayStatus = async () => {
     try {
-      const { data } = await axios.get(`/api/getPathwaystatus?userId=${userId}`);
+      const { data } = await axios.get(
+        `/api/getPathwaystatus?userId=${userId}`
+      );
       if (data.success && data.status === "completed") {
         setPathway(data.pathway);
         setPolling(false); // Stop polling once pathway is available
@@ -140,16 +144,29 @@ const PathwayComponent = () => {
 
   return (
     <div className="p-5">
-    <AnimatedHeader text="Personalized Learning Pathway" className="text-3xl font-extrabold mt-5 mb-10 text-center text-white" />
-    <div>
-      {error && (
-        <Alert variant="destructive" className="p-4 border border-red-600">
-          <AlertDescription className="text-red-200">{error}</AlertDescription>
-        </Alert>
-      )}
-    </div>
+      <div className="flex justify-between items-center ">
+        <Link href="/">
+          <Button className="mb-10 bg-white text-black hover:bg-black hover:text-white transition-transform transform hover:scale-105 px-6 py-3 rounded-md">
+            <MoveLeft />
+            Home
+          </Button>
+        </Link>
+        <AnimatedHeader
+          text="Personalized Learning Pathway"
+          className="text-3xl font-extrabold mt-5 mb-10 mr-20 text-center text-white"
+        />
+        <div>
+          {error && (
+            <Alert variant="destructive" className="p-4 border border-red-600">
+              <AlertDescription className="text-red-200">
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      </div>
 
-    <div className="flex justify-center items-center ">
+      <div className="flex justify-center items-center ">
         <div className="text-white font-bold text-2xl gap-2 flex justify-end mr-10 pb-6">
           <h1>Select your learning style</h1>
         </div>
@@ -167,82 +184,86 @@ const PathwayComponent = () => {
         </div>
       </div>
 
-    {!pathway && (
-            <div className="text-center">
-              <Button
-                onClick={generatePathway}
-                className={cn(
-                  "px-7 py-4  shadow-md hover:scale-105 transition-all",
-                  loading
-                    ? "bg-zinc-600 text-white cursor-not-allowed"
-                    : "bg-accent text-black hover:text-white"
-                )}
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <Loader />
-                    <span>Loading...</span>
-                  </div>
-                ) : (
-                  "Generate Pathway"
-                )}
-              </Button>
-            </div>
-          )}
+      {!pathway && (
+        <div className="text-center">
+          <Button
+            onClick={generatePathway}
+            className={cn(
+              "px-7 py-4  shadow-md hover:scale-105 transition-all",
+              loading
+                ? "bg-zinc-600 text-white cursor-not-allowed"
+                : "bg-accent text-black hover:text-white"
+            )}
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <Loader />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              "Generate Pathway"
+            )}
+          </Button>
+        </div>
+      )}
 
-    {polling && <div className=" flex justify-center items-center mt-4 text-white  text-center">Your tailored roadmap is here! Focused, effective, and designed to match your style for faster success!</div>}
+      {polling && (
+        <div className=" flex justify-center items-center mt-4 text-white  text-center">
+          Your tailored roadmap is here! Focused, effective, and designed to
+          match your style for faster success!
+        </div>
+      )}
 
-    {pathway && (
-          <div className="space-y-8">
-            <Card className="bg-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-3xl font-bold flex justify-center text-gray-200">
-                  Your Learning Journey
-                </CardTitle>
-                <CardDescription className="text-gray-400 flex justify-center text-xl">
-                  A personalized pathway tailored to your needs.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {Array.isArray(pathway) ? (
-                  <div className="space-y-6">
-                    {pathway.map((step, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start p-4 bg-zinc-700 rounded-lg shadow-md border-l-4 border-blue-600"
-                      >
-                        <span className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-zinc-800 text-white rounded-full font-bold text-lg">
-                          {index + 1}
-                        </span>
-                        <div className="ml-4 text-gray-300 text-lg">
-                          {step.replace(/\*\*/g, "")}
-                        </div>
+      {pathway && (
+        <div className="space-y-8">
+          <Card className="bg-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-3xl font-bold flex justify-center text-gray-200">
+                Your Learning Journey
+              </CardTitle>
+              <CardDescription className="text-gray-400 flex justify-center text-xl">
+                A personalized pathway tailored to your needs.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(pathway) ? (
+                <div className="space-y-6">
+                  {pathway.map((step, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start p-4 bg-zinc-700 rounded-lg shadow-md border-l-4 border-blue-600"
+                    >
+                      <span className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-zinc-800 text-white rounded-full font-bold text-lg">
+                        {index + 1}
+                      </span>
+                      <div className="ml-4 text-gray-300 text-lg">
+                        {step.replace(/\*\*/g, "")}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <pre className="whitespace-pre-wrap text-gray-300 text-lg">
-                    {typeof pathway === "string"
-                      ? pathway.replace(/\*\*/g, "")
-                      : pathway}
-                  </pre>
-                )}
-              </CardContent>
-            </Card>
-            <div className="flex justify-center ">
-              <Button
-                onClick={downloadPDF}
-                className="bg-green-600 hover:bg-green-700 transition-transform transform hover:scale-105 text-white px-6 py-3 rounded-md"
-              >
-                Download as PDF
-              </Button>
-            </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <pre className="whitespace-pre-wrap text-gray-300 text-lg">
+                  {typeof pathway === "string"
+                    ? pathway.replace(/\*\*/g, "")
+                    : pathway}
+                </pre>
+              )}
+            </CardContent>
+          </Card>
+          <div className="flex justify-center ">
+            <Button
+              onClick={downloadPDF}
+              className="bg-green-600 hover:bg-green-700 transition-transform transform hover:scale-105 text-white px-6 py-3 rounded-md"
+            >
+              Download as PDF
+            </Button>
           </div>
-        )}
-  </div>
-);
-  
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default PathwayComponent;
