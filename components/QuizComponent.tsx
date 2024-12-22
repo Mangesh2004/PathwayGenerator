@@ -225,7 +225,7 @@ const QuizComponent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-5">
+    <div>
       <AnimatedHeader
         text=" Welcome back!"
         className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent flex justify-center mb-4"
@@ -234,14 +234,14 @@ const QuizComponent: React.FC = () => {
         text="Ready to embark on your next learning adventure? Move a step ahead to build a roadmap tailored just for you!"
         className="text-gray-300 text-xl flex justify-center"
       />
-      <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-zinc-900 p-4 md:p-8">
+      <div className=" p-4 md:p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           className="max-w-5xl mx-auto"
         >
-          <Card className="bg-gradient-to-br from-zinc-900 to-zinc-800 text-white border-gray-700 backdrop-blur-sm">
+          <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 text-white border-gray-700 backdrop-blur-sm">
             <CardContent className="space-y-6 pt-6">
               {!quiz.length ? (
                 <div className="space-y-6 ">

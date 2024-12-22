@@ -139,7 +139,7 @@ const PathwayComponent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-5">
+    <div className="p-5">
     <AnimatedHeader text="Personalized Learning Pathway" className="text-3xl font-extrabold mt-5 mb-10 text-center text-white" />
     <div>
       {error && (
