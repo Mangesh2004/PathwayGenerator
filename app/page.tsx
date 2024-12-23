@@ -8,6 +8,8 @@ import GetStarted from "./_components/GetStarted"
 import FeaturesSectionDemo from "./_components/Features"
 import About from "./_components/About"
 import Background from "@/components/bg"
+import VideoSection from "./_components/VideoSection"
+
 
 export default function Page() {
   return (
@@ -24,6 +26,7 @@ export default function Page() {
           <About />
           <GetStarted />
           <FeaturesSectionDemo />
+          <VideoSection />
         </div>
       </div>
     </main>
